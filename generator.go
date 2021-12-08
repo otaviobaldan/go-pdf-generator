@@ -16,7 +16,13 @@ type PdfGenerator struct {
 	TxtCfgText     *config.TextConfig
 }
 
-func NewPdfGenerator(config config.PdfConfig) (pdfGenerator *PdfGenerator, err error) {
+func NewPdfGenerator(
+	config *config.PdfConfig,
+	TxtCfgFooter *config.TextConfig,
+	TxtCfgTitle *config.TextConfig,
+	TxtCfgSubtitle *config.TextConfig,
+	TxtCfgText *config.TextConfig,
+) (pdfGenerator *PdfGenerator, err error) {
 	pdfGenerator = new(PdfGenerator)
 	pdfGenerator.pdf = gofpdf.New(config.Orientation, config.Units, config.PaperSize, "")
 
