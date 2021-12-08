@@ -13,3 +13,19 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Output of the go profiling tool
+*.prof
+
+# Output of the go coverage tool
+*.out
+
+# Go generated folders
+_obj
+_test
+vendor
+
+# Common IDE folders
+.idea
+.vscode
+.DS_Store
