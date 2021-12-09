@@ -9,7 +9,8 @@ import (
 )
 
 type PdfGenerator struct {
-	pdf            *gofpdf.Fpdf
+	Pdf            *gofpdf.Fpdf
+	TxtCfgHeader   *config.TextConfig
 	TxtCfgFooter   *config.TextConfig
 	TxtCfgTitle    *config.TextConfig
 	TxtCfgSubtitle *config.TextConfig
@@ -18,43 +19,52 @@ type PdfGenerator struct {
 
 func NewPdfGenerator(
 	config *config.PdfConfig,
+	TxtCfgHeader *config.TextConfig,
 	TxtCfgFooter *config.TextConfig,
 	TxtCfgTitle *config.TextConfig,
 	TxtCfgSubtitle *config.TextConfig,
 	TxtCfgText *config.TextConfig,
 ) (pdfGenerator *PdfGenerator, err error) {
-	pdfGenerator = new(PdfGenerator)
-	pdfGenerator.pdf = gofpdf.New(config.Orientation, config.Units, config.PaperSize, "")
+	pdfGenerator = &PdfGenerator{
+		Pdf:            gofpdf.New(config.Orientation, config.Units, config.PaperSize, ""),
+		TxtCfgHeader:   TxtCfgHeader,
+		TxtCfgTitle:    TxtCfgTitle,
+		TxtCfgSubtitle: TxtCfgSubtitle,
+		TxtCfgText:     TxtCfgText,
+		TxtCfgFooter:   TxtCfgFooter,
+	}
 
 	if config.RegisterFonts {
-		err = config.RegisterExternalFonts(pdfGenerator.pdf)
+		err = config.RegisterExternalFonts(pdfGenerator.Pdf)
 		if err != nil {
 			return nil, errors.New("error loading fonts")
 		}
 	}
 
 	margins := config.Margins
-	pdfGenerator.pdf.SetMargins(margins.Left, margins.Top, margins.Right)
+	pdfGenerator.Pdf.SetMargins(margins.Left, margins.Top, margins.Right)
+	pdfGenerator.Pdf.SetAutoPageBreak(true, 40)
+	pdfGenerator.Pdf.AddPage()
 
 	return pdfGenerator, nil
 }
 
 // GenerateDefaultHeader - This function will generate a default header, for now without image
 func (pg *PdfGenerator) GenerateDefaultHeader(headerText string) {
-	cfg := pg.TxtCfgFooter
+	cfg := pg.TxtCfgHeader
 	color := cfg.Color
-	pg.pdf.SetHeaderFunc(func() {
-		pg.pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
-		pg.pdf.SetTextColor(color.R, color.G, color.B)
+	pg.Pdf.SetHeaderFunc(func() {
+		pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
+		pg.Pdf.SetTextColor(color.R, color.G, color.B)
 
 		// Calculate width of title and position
-		wd := pg.pdf.GetStringWidth(headerText) + 6
-		pg.pdf.SetX((210 - wd) / 2)
+		wd := pg.Pdf.GetStringWidth(headerText) + 6
+		pg.Pdf.SetX((210 - wd) / 2)
 
 		// Title
-		pg.pdf.CellFormat(wd, 9, headerText, "", 0, cfg.Align, false, 0, "")
+		pg.Pdf.CellFormat(wd, 9, headerText, "", 0, cfg.Align, false, 0, "")
 		// Line break
-		pg.pdf.Ln(10)
+		pg.Pdf.Ln(10)
 	})
 }
 
@@ -62,19 +72,19 @@ func (pg *PdfGenerator) GenerateDefaultHeader(headerText string) {
 func (pg *PdfGenerator) GenerateDefaultFooter(text string, pageNumber bool) {
 	cfg := pg.TxtCfgFooter
 	color := cfg.Color
-	pg.pdf.SetFooterFunc(func() {
+	pg.Pdf.SetFooterFunc(func() {
 		// Position at 1.5 cm from bottom
-		pg.pdf.SetY(constants.SizeLessOneHalfCmInPoints)
+		pg.Pdf.SetY(constants.SizeLessOneHalfCmInPoints)
 
-		pg.pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
-		pg.pdf.SetTextColor(color.R, color.G, color.B)
-		pg.pdf.CellFormat(0, 28.34, text,
+		pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
+		pg.Pdf.SetTextColor(color.R, color.G, color.B)
+		pg.Pdf.CellFormat(0, 28.34, text,
 			"", 0, cfg.Align, false, 0, "")
 
 		if pageNumber {
 			// page number only black
-			pg.pdf.SetTextColor(0, 0, 0)
-			pg.pdf.CellFormat(0, 28.34, fmt.Sprintf("Pág. %d", pg.pdf.PageNo()),
+			pg.Pdf.SetTextColor(0, 0, 0)
+			pg.Pdf.CellFormat(0, 28.34, fmt.Sprintf("Pág. %d", pg.Pdf.PageNo()),
 				"", 0, constants.AlignRight, false, 0, "")
 		}
 	})
@@ -83,37 +93,37 @@ func (pg *PdfGenerator) GenerateDefaultFooter(text string, pageNumber bool) {
 func (pg *PdfGenerator) GenerateTitle(title string) {
 	cfg := pg.TxtCfgTitle
 	color := cfg.Color
-	pg.pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
-	pg.pdf.SetTextColor(color.R, color.G, color.B)
-	pg.pdf.CellFormat(0, constants.SizeTitleHeight, title,
+	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
+	pg.Pdf.SetTextColor(color.R, color.G, color.B)
+	pg.Pdf.CellFormat(0, constants.SizeTitleHeight, title,
 		"", 1, cfg.Align, false, 0, "")
 
 	// Line break 
-	pg.pdf.Ln(constants.SizeLineBreak)
+	pg.Pdf.Ln(constants.SizeLineBreak)
 }
 
 func (pg *PdfGenerator) GenerateSubtitle(subtitle string) {
 	cfg := pg.TxtCfgSubtitle
 	color := cfg.Color
 
-	pg.pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
-	pg.pdf.SetTextColor(color.R, color.G, color.B)
-	pg.pdf.CellFormat(0, constants.SizeSubTitleHeight, subtitle,
+	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
+	pg.Pdf.SetTextColor(color.R, color.G, color.B)
+	pg.Pdf.CellFormat(0, constants.SizeSubTitleHeight, subtitle,
 		"", 1, cfg.Align, false, 0, "")
 
 	// Line break 
-	pg.pdf.Ln(constants.SizeLineBreak)
+	pg.Pdf.Ln(constants.SizeLineBreak)
 }
 
 func (pg *PdfGenerator) GenerateText(text string) {
 	cfg := pg.TxtCfgText
 	color := cfg.Color
 
-	pg.pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
-	pg.pdf.SetTextColor(color.R, color.G, color.B)
+	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
+	pg.Pdf.SetTextColor(color.R, color.G, color.B)
 
-	pg.pdf.MultiCell(0, constants.SizeTextHeight, text, "", cfg.Align, false)
+	pg.Pdf.MultiCell(0, constants.SizeTextHeight, text, "", cfg.Align, false)
 
 	// Line break
-	pg.pdf.Ln(-1)
+	pg.Pdf.Ln(-1)
 }
