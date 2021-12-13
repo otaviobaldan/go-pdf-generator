@@ -149,7 +149,7 @@ func (pg *PdfGenerator) GenerateSignature(signatureName string) {
 
 func (pg *PdfGenerator) calculateSize(size float64) float64 {
 	if pg.isPointUnit {
-		return pg.Pdf.UnitToPointConvert(size)
+		return size * 2.834
 	}
 	return size
 }
