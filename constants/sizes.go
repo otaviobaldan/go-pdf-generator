@@ -4,6 +4,6 @@ const (
 	SizeLineBreak = 4
 
 	SizeTitleHeight    = 12.5
-	SizeSubTitleHeight = 6
-	SizeTextHeight     = 6
+	SizeSubTitleHeight = 5
+	SizeTextHeight     = 5
 )
