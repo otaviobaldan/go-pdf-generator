@@ -138,10 +138,10 @@ func (pg *PdfGenerator) GenerateSignature(signatureName string) {
 	width, _ := pg.Pdf.GetPageSize()
 
 	lineSize := pg.calculateSize(130)
-	availableSpace := pg.calculateSize((width - left - right - lineSize) / 2)
-	lineY := pg.calculateSize(currentY + 20)
-	lineInit := pg.calculateSize(left + availableSpace)
-	lineEnd := pg.calculateSize(left + availableSpace + lineSize)
+	availableSpace := (width - left - right - lineSize) / 2
+	lineY := currentY + pg.calculateSize(20)
+	lineInit := left + availableSpace
+	lineEnd := left + availableSpace + lineSize
 
 	pg.Pdf.Line(lineInit, lineY, lineEnd, lineY)
 	pg.Pdf.CellFormat(0, pg.calculateSize(50), signatureName, "", 1, "C", false, 0, "")
