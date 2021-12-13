@@ -10,6 +10,7 @@ import (
 
 type PdfGenerator struct {
 	Pdf            *gofpdf.Fpdf
+	isPointUnit    bool
 	TxtCfgHeader   *config.TextConfig
 	TxtCfgFooter   *config.TextConfig
 	TxtCfgTitle    *config.TextConfig
@@ -27,6 +28,7 @@ func NewPdfGenerator(
 ) (pdfGenerator *PdfGenerator, err error) {
 	pdfGenerator = &PdfGenerator{
 		Pdf:            gofpdf.New(config.Orientation, config.Units, config.PaperSize, ""),
+		isPointUnit:    config.Units == constants.UnitsPoints,
 		TxtCfgHeader:   TxtCfgHeader,
 		TxtCfgTitle:    TxtCfgTitle,
 		TxtCfgSubtitle: TxtCfgSubtitle,
@@ -43,7 +45,7 @@ func NewPdfGenerator(
 
 	margins := config.Margins
 	pdfGenerator.Pdf.SetMargins(margins.Left, margins.Top, margins.Right)
-	pdfGenerator.Pdf.SetAutoPageBreak(true, 40)
+	pdfGenerator.Pdf.SetAutoPageBreak(true, pdfGenerator.calculateSize(40))
 	pdfGenerator.Pdf.AddPage()
 
 	return pdfGenerator, nil
@@ -58,13 +60,14 @@ func (pg *PdfGenerator) GenerateDefaultHeader(headerText string) {
 		pg.Pdf.SetTextColor(color.R, color.G, color.B)
 
 		// Calculate width of title and position
-		wd := pg.Pdf.GetStringWidth(headerText) + 6
-		pg.Pdf.SetX((210 - wd) / 2)
+		stringWidth := pg.calculateSize(pg.Pdf.GetStringWidth(headerText) + 6)
+		width, _ := pg.Pdf.GetPageSize()
+		pg.Pdf.SetX((width - stringWidth) / 2)
 
 		// Title
-		pg.Pdf.CellFormat(wd, 9, headerText, "", 0, cfg.Align, false, 0, "")
+		pg.Pdf.CellFormat(stringWidth, 9, headerText, "", 0, cfg.Align, false, 0, "")
 		// Line break
-		pg.Pdf.Ln(10)
+		pg.Pdf.Ln(pg.calculateSize(10))
 	})
 }
 
@@ -73,18 +76,19 @@ func (pg *PdfGenerator) GenerateDefaultFooter(text string, pageNumber bool) {
 	cfg := pg.TxtCfgFooter
 	color := cfg.Color
 	pg.Pdf.SetFooterFunc(func() {
+
 		// Position at 1.5 cm from bottom
-		pg.Pdf.SetY(constants.SizeLessOneHalfCmInPoints)
+		pg.Pdf.SetY(pg.calculateSize(15))
 
 		pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 		pg.Pdf.SetTextColor(color.R, color.G, color.B)
-		pg.Pdf.CellFormat(0, 28.34, text,
+		pg.Pdf.CellFormat(0, pg.calculateSize(10), text,
 			"", 0, cfg.Align, false, 0, "")
 
 		if pageNumber {
 			// page number only black
 			pg.Pdf.SetTextColor(0, 0, 0)
-			pg.Pdf.CellFormat(0, 28.34, fmt.Sprintf("Pág. %d", pg.Pdf.PageNo()),
+			pg.Pdf.CellFormat(0, pg.calculateSize(10), fmt.Sprintf("Pág. %d", pg.Pdf.PageNo()),
 				"", 0, constants.AlignRight, false, 0, "")
 		}
 	})
@@ -133,10 +137,19 @@ func (pg *PdfGenerator) GenerateSignature(signatureName string) {
 	left, _, right, _ := pg.Pdf.GetMargins()
 	width, _ := pg.Pdf.GetPageSize()
 
-	lineSize := float64(130)
-	availableSpace := (width - left - right - lineSize) / 2
-	lineY := currentY + 20
+	lineSize := pg.calculateSize(130)
+	availableSpace := pg.calculateSize((width - left - right - lineSize) / 2)
+	lineY := pg.calculateSize(currentY + 20)
+	lineInit := pg.calculateSize(left + availableSpace)
+	lineEnd := pg.calculateSize(left + availableSpace + lineSize)
 
-	pg.Pdf.Line(left+availableSpace, lineY, left+availableSpace+lineSize, lineY)
-	pg.Pdf.CellFormat(0, 50, signatureName, "", 1, "C", false, 0, "")
+	pg.Pdf.Line(lineInit, lineY, lineEnd, lineY)
+	pg.Pdf.CellFormat(0, pg.calculateSize(50), signatureName, "", 1, "C", false, 0, "")
+}
+
+func (pg *PdfGenerator) calculateSize(size float64) float64 {
+	if pg.isPointUnit {
+		return pg.Pdf.UnitToPointConvert(size)
+	}
+	return size
 }
