@@ -78,7 +78,7 @@ func (pg *PdfGenerator) GenerateDefaultFooter(text string, pageNumber bool) {
 	pg.Pdf.SetFooterFunc(func() {
 
 		// Position at 1.5 cm from bottom
-		pg.Pdf.SetY(pg.calculateSize(15))
+		pg.Pdf.SetY(pg.calculateSize(-15))
 
 		pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 		pg.Pdf.SetTextColor(color.R, color.G, color.B)
@@ -99,7 +99,7 @@ func (pg *PdfGenerator) GenerateTitle(title string) {
 	color := cfg.Color
 	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 	pg.Pdf.SetTextColor(color.R, color.G, color.B)
-	pg.Pdf.CellFormat(0, constants.SizeTitleHeight, title,
+	pg.Pdf.CellFormat(0, pg.calculateSize(constants.SizeTitleHeight), title,
 		"", 1, cfg.Align, false, 0, "")
 
 	// Line break 
@@ -112,11 +112,11 @@ func (pg *PdfGenerator) GenerateSubtitle(subtitle string) {
 
 	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 	pg.Pdf.SetTextColor(color.R, color.G, color.B)
-	pg.Pdf.CellFormat(0, constants.SizeSubTitleHeight, subtitle,
+	pg.Pdf.CellFormat(0, pg.calculateSize(constants.SizeSubTitleHeight), subtitle,
 		"", 1, cfg.Align, false, 0, "")
 
 	// Line break 
-	pg.Pdf.Ln(constants.SizeLineBreak)
+	pg.Pdf.Ln(pg.calculateSize(constants.SizeLineBreak))
 }
 
 func (pg *PdfGenerator) GenerateText(text string) {
@@ -126,7 +126,7 @@ func (pg *PdfGenerator) GenerateText(text string) {
 	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 	pg.Pdf.SetTextColor(color.R, color.G, color.B)
 
-	pg.Pdf.MultiCell(0, constants.SizeTextHeight, text, "", cfg.Align, false)
+	pg.Pdf.MultiCell(0, pg.calculateSize(constants.SizeTextHeight), text, "", cfg.Align, false)
 
 	// Line break
 	pg.Pdf.Ln(-1)
