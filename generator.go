@@ -127,3 +127,16 @@ func (pg *PdfGenerator) GenerateText(text string) {
 	// Line break
 	pg.Pdf.Ln(-1)
 }
+
+func (pg *PdfGenerator) GenerateSignature(signatureName string) {
+	currentY := pg.Pdf.GetY()
+	left, _, right, _ := pg.Pdf.GetMargins()
+	width, _ := pg.Pdf.GetPageSize()
+
+	lineSize := float64(130)
+	availableSpace := (width - left - right - lineSize) / 2
+	lineY := currentY + 20
+
+	pg.Pdf.Line(left+availableSpace, lineY, left+availableSpace+lineSize, lineY)
+	pg.Pdf.CellFormat(0, 50, signatureName, "", 1, "C", false, 0, "")
+}
