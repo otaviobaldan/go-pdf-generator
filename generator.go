@@ -6,6 +6,7 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/otaviobaldan/go-pdf-generator/config"
 	"github.com/otaviobaldan/go-pdf-generator/constants"
+	"strings"
 )
 
 type PdfGenerator struct {
@@ -125,6 +126,9 @@ func (pg *PdfGenerator) GenerateText(text string) {
 
 	pg.Pdf.SetFont(cfg.FontFamily, cfg.Style, cfg.Size)
 	pg.Pdf.SetTextColor(color.R, color.G, color.B)
+
+	// replacing line breaks \n on string
+	text = strings.ReplaceAll(text, `\n`, "\n")
 
 	pg.Pdf.MultiCell(0, pg.calculateSize(constants.SizeTextHeight), text, "", cfg.Align, false)
 
